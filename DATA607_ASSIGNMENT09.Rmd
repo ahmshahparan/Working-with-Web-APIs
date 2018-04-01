@@ -1,0 +1,63 @@
+---
+title: "Working with Web APIs"
+author: "A H M Shahparan"
+date: "3/31/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+The New York Times web site provides a rich set of APIs, as described here: http://developer.nytimes.com/docs You’ll need to start by signing up for an API key.
+Your task is to choose one of the New York Times APIs, construct an interface in R to read in the JSON data, and transform it to an R dataframe.
+
+####Loading libraries
+```{r}
+#To parse JSON data into dataframe
+require (jsonlite)
+#To display R data objects as tables on HTML pages
+library(DT)
+```
+
+####URI Structure
+We are using articlesearch API from New York Times to retrieve articles by our search terms. We need to populate a URI structure containg the web url and the API Key acquired from New York Times by simply using the `paste()` command.
+
+```{r}
+baseUrl <- "https://api.nytimes.com/svc/search/v2/articlesearch.json"
+apiKey <- "?api-key=1b5b89d9860f42cba5d3db52032f1ef8"
+uri <- paste(baseUrl, apiKey, sep="") 
+uri
+```
+
+####Adding up a query
+Search query term. Search is performed on the article body, headline and byline etc. Like the API key, we paste the query into the URl. We will use `URLencode` function to percent-encode characters in URL (). 
+```{r}
+query <- "&q=Data Science"
+uri <- paste(uri, URLencode(query), sep="")
+uri
+```
+
+####Convert to R dataframe
+Now we will use fromJSON function to parse JSON data into the R data frame. Once we have it parsed, we choose to get the docs porition of the response data as we get our desired data there.
+
+```{r}
+jsonContent <- fromJSON(uri)
+df <- jsonContent$response$docs
+colnames(df)
+```
+
+We use `flatten` function that automatically flattens nested data frames into a single non-nested data frame.
+```{r}
+flatdf <- flatten(df)
+colnames(flatdf)
+```
+
+Subsetting the falt data based on columns of interest and then displaying the data as a table on HTML page. 
+```{r}
+subsetData <- flatdf[ , c("pub_date", "web_url","headline.main", "byline.original", "snippet")]
+options(DT.options = list(pageLength = 5))
+datatable(subsetData)
+```
+
+
